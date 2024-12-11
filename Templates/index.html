@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sensor Data Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        table, th, td {
+            border: 1px solid black;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Sensor Data Dashboard</h1>
+
+    <form id="data-form">
+        <label for="sensor-value">Enter Value:</label>
+        <input type="number" id="sensor-value" name="value" required>
+        <button type="submit">Submit</button>
+    </form>
+
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Value</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+        <tbody id="data-table">
+            <!-- Data will be dynamically added here -->
+        </tbody>
+    </table>
+
+    <script>
+        // Fetch data and populate the table
+        function fetchData() {
+            fetch('/data')
+                .then(response => response.json())
+                .then(data => {
+                    const tableBody = document.getElementById('data-table');
+                    tableBody.innerHTML = ''; // Clear existing data
+                    data.forEach(row => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td>${row.id}</td>
+                            <td>${row.value}</td>
+                            <td>${row.timestamp}</td>
+                        `;
+                        tableBody.appendChild(tr);
+                    });
+                })
+                .catch(err => console.error('Error fetching data:', err));
+        }
+
+        // Handle form submission
+        document.getElementById('data-form').addEventListener('submit', function (e) {
+            e.preventDefault(); // Prevent page reload
+
+            const value = document.getElementById('sensor-value').value;
+
+            // Send value to the backend
+            fetch('/add', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ value: parseInt(value) })
+            })
+                .then(response => response.json())
+                .then(result => {
+                    alert(result.message); // Show success/failure message
+                    fetchData(); // Refresh the table
+                })
+                .catch(err => console.error('Error submitting data:', err));
+        });
+
+        // Fetch data every 5 seconds
+        setInterval(fetchData, 5000);
+        fetchData(); // Initial fetch
+    </script>
+</body>
+</html>
